@@ -4,7 +4,6 @@
 #include "include/text.h"
 #include "tui_kit.h"
 #include <stdio.h>
-#include <valarray>
 #include <vector>
 #include "../tui-kit/include/menu_utils.h"
 #include <signal.h>
@@ -128,8 +127,10 @@ void print_list(int color){
 		switch (key) {
 		case '\n':
 			if(status == Status::Done){
+				if(done.empty()) break;
 				list_transfer(&todo, &done, selected);
 			} else {
+				if(todo.empty()) break;
 				list_transfer(&done, &todo, selected);
 			}
 			if(selected == list.size()-1) selected = list.size()-2;
@@ -172,6 +173,7 @@ void siginthandler(int param){
 	Text::clearScreen();
 	Text::enableInputBuffering();
 	cout << "[WARN] Exited abnormally" << endl;
+	exit(0);
 }
 
 bool startsWith(const std::string& fullString, const std::string& prefix) {

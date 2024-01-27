@@ -1,7 +1,13 @@
 #!/bin/bash
 
-build_folder="./build/"
 
+
+
+if [ "$1" == "clean" ]; then
+	./scripts/clean
+fi
+
+build_folder="./build/"
 executable_path=$(find "$build_folder" -maxdepth 1 -type f -executable | head -n 1)
 
 if [ -n "$executable_path" ]; then
