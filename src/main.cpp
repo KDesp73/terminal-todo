@@ -172,7 +172,7 @@ void siginthandler(int param){
 	save_state(todo, done, "todo.txt");
 	Text::clearScreen();
 	Text::enableInputBuffering();
-	cout << "[WARN] Exited abnormally" << endl;
+	// cout << "[WARN] Exited abnormally" << endl;
 	exit(0);
 }
 

@@ -16,12 +16,7 @@ set(SOURCES
     src/main.cpp
 )
 
-# Add your header files
-set(HEADERS
-    include/header.h
-)
-
 # Add an executable target
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS}) 
+add_executable(${PROJECT_NAME} ${SOURCES}) 
 target_link_libraries(${PROJECT_NAME} TuiKit)
 

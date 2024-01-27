@@ -1,23 +1,20 @@
-# CPP-Project-Template
+# terminal-todo
 
-## Tree
+An easy to use todo app for your terminal with a TUI
 
+## Preview
+
+## Install
+
+```console
+git clone --depth=1 https://github.com/KDesp73/terminal-todo
+./install.sh
 ```
-.
-├── CMakeLists.txt
-├── .editorconfig
-├── .gitignore
-├── include
-│   └── header.h
-├── README.md
-├── scripts
-│   ├── build
-│   ├── build_and_run
-│   ├── clean
-│   ├── clean_and_build
-│   ├── remove_submodule
-│   └── run
-├── src
-│   └── main.cpp
-└── tests
-    └── test.cpp
+
+## License
+
+[The Unlicense](./LICENSE)
+
+## Author
+
+[KDesp73](https://github.com/KDesp73)
