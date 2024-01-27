@@ -21,11 +21,7 @@ set(HEADERS
     include/header.h
 )
 
-set(TESTS
-    tests/test.cpp
-)
-
 # Add an executable target
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${TESTS})
+add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS}) 
 target_link_libraries(${PROJECT_NAME} TuiKit)
 

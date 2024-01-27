@@ -54,8 +54,10 @@ void toggle_status(){
 }
 void remove_item(int selected){
 	if(status == Status::Done) {
+		if(done.empty()) return;
 		done.erase(done.begin() + selected);
 	} else {
+		if(todo.empty()) return;
 		todo.erase(todo.begin() + selected);
 	}
 }
