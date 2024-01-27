@@ -82,7 +82,10 @@ void add_todo(){
 	cout << "TODO: ";
 	getline(cin, input);
 
-	todo.push_back(input);
+	if(input.length() != 0){
+		todo.push_back(input);
+	}
+
 	Text::disableInputBuffering();
 }
 
@@ -141,6 +144,7 @@ void print_list(int color){
 			break;
 		case 'h': // toggle help
 			help = !help;
+			break;
 		case 'a': // add
 			add_todo();
 			break;
