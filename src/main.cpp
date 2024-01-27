@@ -38,7 +38,7 @@ void list_transfer(vector<string> *target, vector<string> *src, int index){
 }
 
 void save_state(vector<string> todo, vector<string> done, string file){
-	Files::writeFile(file, "");
+	Files::writeFile(file, ""); // Empty the file
 	for(string task : todo){
 		Files::appendFile(file, "TODO: " + task + "\n");
 	}
@@ -64,11 +64,34 @@ string wrap_in_brackets(string text, int color){
 	return Text::color("fg", color) + "[" + Text::normal + text + Text::color("fg", color) + "]" + Text::normal;
 }
 
+void print_keys(){
+	cout << endl;
+	cout << wrap_in_brackets("h", 4) + " toggle help" << endl;
+	cout << wrap_in_brackets("↑", 4) + " go up" << endl;
+	cout << wrap_in_brackets("↓", 4) + " go down" << endl;
+	cout << wrap_in_brackets("q", 4) + " exit the program" << endl;
+	cout << wrap_in_brackets("d", 4) + " delete task" << endl;
+	cout << wrap_in_brackets("a", 4) + " add a new task" << endl;
+	cout << wrap_in_brackets("tab", 4) + " switch between TODO and DONE" << endl;
+	cout << wrap_in_brackets("enter", 4) + " switch task status" << endl;
+}
+void add_todo(){
+	Text::clearScreen();
+	Text::enableInputBuffering();
+	string input;
+	cout << "TODO: ";
+	getline(cin, input);
+
+	todo.push_back(input);
+	Text::disableInputBuffering();
+}
+
 void print_list(int color){
 	vector<string> list = (status == Status::Todo) ? todo : done;
 	int max = 20;
 	int selected = 0;
 	bool menuActive = true;
+	bool help = false;
 	
     for(int i = 0; i < list.size(); i++){
         list.at(i) = TuiKit::addSpaces("- [ ] " + list.at(i), max);
@@ -85,6 +108,12 @@ void print_list(int color){
 			cout << ((selected == i) ? Text::color("bg", color) : "") << ((status == Status::Todo) ? "- [ ] " : "- [x] ") << list.at(i) << Text::normal << endl;
 		}
 
+		if(help){
+			print_keys();
+		}
+
+		// Handle keys
+		
 #ifdef WIN32
 		int key = _getch();
 #else
@@ -110,7 +139,10 @@ void print_list(int color){
 			selected = 0;
 			toggle_status();
 			break;
+		case 'h': // toggle help
+			help = !help;
 		case 'a': // add
+			add_todo();
 			break;
 		case 'd': // remove
 			remove_item(selected);
@@ -151,13 +183,7 @@ std::string removeSubstring(const std::string& mainString, const std::string& su
     return result;
 }
 
-
-int main(int argc, char **argv){
-	if(!Files::exists("todo.txt")){
-		Files::writeFile("todo.txt", "");
-	}
-	
-	// load todos
+void load_state(){
 	vector<string> lines = Files::readFileLines("todo.txt");
 
 	string todo_prefix = "TODO: ";
@@ -170,12 +196,20 @@ int main(int argc, char **argv){
 			} else if(startsWith(line, done_prefix)){
 				done.push_back(removeSubstring(line, done_prefix));
 			} else {
-				cout << "[ERRO] Ill-formed `todo.txt` file at line: " << i+1 << endl;
+				cerr << "[ERRO] Ill-formed `todo.txt` file at line: " << i+1 << endl;
 				exit(1);
 			}
 		}
 	}
+}
 
+int main(int argc, char **argv){
+	if(!Files::exists("todo.txt")){
+		Files::writeFile("todo.txt", "");
+	}
+	
+	// load todos
+	load_state();
 
 	Text::disableInputBuffering();
 
