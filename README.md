@@ -14,6 +14,9 @@ git clone --depth=1 https://github.com/KDesp73/terminal-todo
 ./install.sh
 ```
 
+A different list can be created for any directory by running `todo`
+
+
 ## Keys
 
 | Key     | Functionality      |
