@@ -1,0 +1,5 @@
+#!/bin/zsh
+
+directory="./build"
+
+find $directory -type f -executable -exec {} \;
