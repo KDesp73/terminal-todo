@@ -80,7 +80,8 @@ string add_todo(){
 	Text::clearScreen();
 	Text::enableInputBuffering();
 	string input;
-	cout << "TODO: ";
+	cout << endl;
+	cout << "  TODO: ";
 	getline(cin, input);
 
 	if(input.length() != 0){
@@ -103,15 +104,17 @@ void print_list(int color){
 		Text::clearScreen();
 		list = (status == Status::Todo) ? &todo : &done;
 
-		for(int i = 0; i < list->size(); i++){
-			list->at(i) = TuiKit::addSpaces(list->at(i), max);
-		}
-		cout << ((status == Status::Todo) ? wrap_in_brackets("TODO", color) + " DONE " : " TODO " + wrap_in_brackets("DONE", color)) + " " << std::endl;
+		// for(int i = 0; i < list->size(); i++){
+		// 	list->at(i) = TuiKit::addSpaces(list->at(i), max);
+		// }
+		
+		cout << endl;
+		cout << " " << ((status == Status::Todo) ? wrap_in_brackets("TODO", color) + " DONE " : " TODO " + wrap_in_brackets("DONE", color)) + " " << std::endl;
 		cout << endl;
 		// cout << "-----------" << endl;
 		
 		for(int i = 0; i < list->size(); i++){
-			cout << ((selected == i) ? Text::color("bg", color) : "") << ((status == Status::Todo) ? "- [ ] " : "- [x] ") << list->at(i) << Text::normal << endl;
+			cout << " " << ((selected == i) ? Text::color("bg", color) : "") << ((status == Status::Todo) ? " - [ ] " : " - [x] ") << list->at(i) << " " << Text::normal << endl;
 		}
 
 		if(help){
