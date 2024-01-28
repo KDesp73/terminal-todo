@@ -10,8 +10,9 @@ An easy to use todo app for your terminal with a TUI
 ## Install
 
 ```console
-git clone --depth=1 https://github.com/KDesp73/terminal-todo
-./install.sh
+$ git clone --depth=1 https://github.com/KDesp73/terminal-todo
+$ cd terminal-todo
+$ ./install.sh
 ```
 
 A different list can be created for any directory by running `todo`
