@@ -67,16 +67,16 @@ string wrap_in_brackets(string text, int color){
 
 void print_keys(){
 	cout << endl;
-	cout << wrap_in_brackets("h", 4) + " toggle help" << endl;
-	cout << wrap_in_brackets("↑", 4) + " go up" << endl;
-	cout << wrap_in_brackets("↓", 4) + " go down" << endl;
-	cout << wrap_in_brackets("q", 4) + " exit the program" << endl;
-	cout << wrap_in_brackets("d", 4) + " delete task" << endl;
-	cout << wrap_in_brackets("a", 4) + " add a new task" << endl;
-	cout << wrap_in_brackets("tab", 4) + " switch between TODO and DONE" << endl;
+	cout << wrap_in_brackets("  h  ", 4) + " toggle help" << endl;
+	cout << wrap_in_brackets("  ↑  ", 4) + " go up" << endl;
+	cout << wrap_in_brackets("  ↓  ", 4) + " go down" << endl;
+	cout << wrap_in_brackets("  q  ", 4) + " exit the program" << endl;
+	cout << wrap_in_brackets("  d  ", 4) + " delete task" << endl;
+	cout << wrap_in_brackets("  a  ", 4) + " add a new task" << endl;
+	cout << wrap_in_brackets(" tab ", 4) + " switch between TODO and DONE" << endl;
 	cout << wrap_in_brackets("enter", 4) + " switch task status" << endl;
 }
-void add_todo(){
+string add_todo(){
 	Text::clearScreen();
 	Text::enableInputBuffering();
 	string input;
@@ -88,28 +88,30 @@ void add_todo(){
 	}
 
 	Text::disableInputBuffering();
+	return input;
 }
 
 void print_list(int color){
-	vector<string> list = (status == Status::Todo) ? todo : done;
-	int max = 20;
+	vector<string> *list;
+	int max = 25;
 	int selected = 0;
 	bool menuActive = true;
 	bool help = false;
 	
-    for(int i = 0; i < list.size(); i++){
-        list.at(i) = TuiKit::addSpaces("- [ ] " + list.at(i), max);
-    }
 	
 	while (menuActive) {
 		Text::clearScreen();
-		list = (status == Status::Todo) ? todo : done;
+		list = (status == Status::Todo) ? &todo : &done;
+
+		for(int i = 0; i < list->size(); i++){
+			list->at(i) = TuiKit::addSpaces(list->at(i), max);
+		}
 		cout << ((status == Status::Todo) ? wrap_in_brackets("TODO", color) + " DONE " : " TODO " + wrap_in_brackets("DONE", color)) + " " << std::endl;
 		cout << endl;
 		// cout << "-----------" << endl;
 		
-		for(int i = 0; i < list.size(); i++){
-			cout << ((selected == i) ? Text::color("bg", color) : "") << ((status == Status::Todo) ? "- [ ] " : "- [x] ") << list.at(i) << Text::normal << endl;
+		for(int i = 0; i < list->size(); i++){
+			cout << ((selected == i) ? Text::color("bg", color) : "") << ((status == Status::Todo) ? "- [ ] " : "- [x] ") << list->at(i) << Text::normal << endl;
 		}
 
 		if(help){
@@ -133,13 +135,13 @@ void print_list(int color){
 				if(todo.empty()) break;
 				list_transfer(&done, &todo, selected);
 			}
-			if(selected == list.size()-1) selected = list.size()-2;
+			if(selected == list->size()) selected = list->size()-1;
 			break;
 		case 65: // UP
-			selected = (selected == 0) ? list.size()-1 : selected-1;
+			selected = (selected == 0) ? list->size()-1 : selected-1;
 			break;
 		case 66: // DOWN
-			selected = (selected == list.size()-1) ? 0 : selected+1;
+			selected = (selected == list->size()-1) ? 0 : selected+1;
 			break;
 		case '\t':
 			selected = 0;
@@ -153,6 +155,7 @@ void print_list(int color){
 			break;
 		case 'd': // remove
 			remove_item(selected);
+			if(selected == list->size()) selected = list->size()-1;
 			break;
 		case 'q': // quit
 			save_state(todo, done, "todo.txt");
