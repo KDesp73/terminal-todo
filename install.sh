@@ -6,6 +6,7 @@ git submodule init && git submodule update
 
 if [ "$1" == "clean" ]; then
 	./scripts/clean
+	sudo rm -rf /usr/bin/todo
 fi
 
 build_folder="./build/"
