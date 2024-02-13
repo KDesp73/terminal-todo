@@ -127,7 +127,17 @@ void create_issue(int selected){
 	}
 
 	string todo_item = todo[selected];
-	std::string command = "gh issue create --title \"" + todo_item + "\" --body \"\"";
+	
+	Text::clearScreen();
+	Text::enableInputBuffering();
+	string body;
+	cout << endl;
+	cout << "  Enter body for \"" + todo_item + "\" (Press enter to leave empty): ";
+	getline(cin, body);
+
+	Text::disableInputBuffering();
+
+	std::string command = "gh issue create --title \"" + todo_item + "\" --body \"" + body + "\"";
 
     system(command.c_str());
 }

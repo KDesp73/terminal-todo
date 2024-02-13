@@ -35,7 +35,7 @@ A different list can be created for any directory by running `todo`
 
 ## Github issues
 
-If you want to have automating issues you need to log-in to the [gh cli tool](https://cli.github.com/)
+If you want to have automatic issues you need to log-in to the [gh cli tool](https://cli.github.com/)
 
 ## License
 
