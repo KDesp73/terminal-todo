@@ -133,6 +133,7 @@ void create_issue(int selected){
 }
 
 void issue_all(){
+	if(!isUserLoggedIn()) return;
 	for(int i = 0; i < todo.size(); i++){
 		create_issue(i);
 	}
