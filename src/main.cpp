@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include "include/files.h"
@@ -73,6 +74,8 @@ void print_keys(){
 	cout << wrap_in_brackets("  q  ", 4) + " exit the program" << endl;
 	cout << wrap_in_brackets("  d  ", 4) + " delete task" << endl;
 	cout << wrap_in_brackets("  a  ", 4) + " add a new task" << endl;
+	cout << wrap_in_brackets("  i  ", 4) + " create issue for selected todo" << endl;
+	cout << wrap_in_brackets("  I  ", 4) + " create issues for all todos" << endl;
 	cout << wrap_in_brackets(" tab ", 4) + " switch between TODO and DONE" << endl;
 	cout << wrap_in_brackets("enter", 4) + " switch task status" << endl;
 }
@@ -92,13 +95,55 @@ string add_todo(){
 	return input;
 }
 
+bool isUserLoggedIn() {
+    FILE *pipe = popen("gh auth status 2>&1", "r");
+    if (!pipe) {
+        std::cerr << "Error: Failed to execute command.\n";
+        return false;
+    }
+
+    char buffer[128];
+    std::string result = "";
+    while (!feof(pipe)) {
+        if (fgets(buffer, 128, pipe) != nullptr)
+            result += buffer;
+    }
+    pclose(pipe);
+
+    return result.find("Logged in to github.com") != std::string::npos;
+}
+
+void create_issue(int selected){
+	if (system("gh --version") != 0) {
+		return;
+	}
+
+	if(!isUserLoggedIn()) {
+		return;
+	}
+
+	if(todo.empty()){
+		return;
+	}
+
+	string todo_item = todo[selected];
+	std::string command = "gh issue create --title \"" + todo_item + "\" --body \"\"";
+
+    system(command.c_str());
+}
+
+void issue_all(){
+	for(int i = 0; i < todo.size(); i++){
+		create_issue(i);
+	}
+}
+
 void print_list(int color){
 	vector<string> *list;
 	int max = 25;
 	int selected = 0;
 	bool menuActive = true;
 	bool help = false;
-	
 	
 	while (menuActive) {
 		Text::clearScreen();
@@ -159,6 +204,15 @@ void print_list(int color){
 		case 'd': // remove
 			remove_item(selected);
 			if(selected == list->size()) selected = list->size()-1;
+			break;
+		case 'i': // create issue
+			if(status == Status::Done) {
+				continue;
+			}
+			create_issue(selected);
+			break;
+		case 'I': // Make all todos issues
+			issue_all();
 			break;
 		case 'q': // quit
 			save_state(todo, done, "todo.txt");
