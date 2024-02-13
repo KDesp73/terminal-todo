@@ -28,9 +28,14 @@ A different list can be created for any directory by running `todo`
 | `a`     | Add new task       |
 | `d`     | Remove a task      |
 | `q`     | Exit the program   |
+| `i`     | Create issue from selected todo   |
+| `I`     | Create issues for all todos   |
 | `Enter` | Switch task status |
 | `Tab`   | Switch between TODO and DONE tabs |
 
+## Github issues
+
+If you want to have automating issues you need to log-in to the [gh cli tool](https://cli.github.com/)
 
 ## License
 
