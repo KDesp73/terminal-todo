@@ -113,7 +113,7 @@ bool isUserLoggedIn() {
     return result.find("Logged in to github.com") != std::string::npos;
 }
 
-void create_issue(int selected){
+void create_issue(int selected, bool with_body = true){
 	if (system("gh --version") != 0) {
 		return;
 	}
@@ -128,14 +128,15 @@ void create_issue(int selected){
 
 	string todo_item = todo[selected];
 	
-	Text::clearScreen();
-	Text::enableInputBuffering();
-	string body;
-	cout << endl;
-	cout << "  Enter body for \"" + todo_item + "\" (Press enter to leave empty): ";
-	getline(cin, body);
-
-	Text::disableInputBuffering();
+	string body = "";
+	if(with_body){
+		Text::clearScreen();
+		Text::enableInputBuffering();
+		cout << endl;
+		cout << "  Enter body for \"" + todo_item + "\" (Press enter to leave empty): ";
+		getline(cin, body);
+		Text::disableInputBuffering();
+	}
 
 	std::string command = "gh issue create --title \"" + todo_item + "\" --body \"" + body + "\"";
 
@@ -145,7 +146,7 @@ void create_issue(int selected){
 void issue_all(){
 	if(!isUserLoggedIn()) return;
 	for(int i = 0; i < todo.size(); i++){
-		create_issue(i);
+		create_issue(i, false);
 	}
 }
 
