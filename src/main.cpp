@@ -22,6 +22,7 @@
 using namespace TuiKit;
 using namespace std;
 
+static string todo_file;
 vector<string> todo;
 vector<string> done;
 
@@ -227,7 +228,7 @@ void print_list(int color){
 			issue_all();
 			break;
 		case 'q': // quit
-			save_state(todo, done, "todo.txt");
+			save_state(todo, done, todo_file);
 			menuActive = false;
 			Text::clearScreen();
 			Text::enableInputBuffering();
@@ -241,7 +242,7 @@ void print_list(int color){
 }
 
 void siginthandler(int param){
-	save_state(todo, done, "todo.txt");
+	save_state(todo, done, todo_file);
 	Text::clearScreen();
 	Text::enableInputBuffering();
 	// cout << "[WARN] Exited abnormally" << endl;
@@ -264,7 +265,7 @@ std::string removeSubstring(const std::string& mainString, const std::string& su
 }
 
 void load_state(){
-	vector<string> lines = Files::readFileLines("todo.txt");
+	vector<string> lines = Files::readFileLines(todo_file);
 
 	string todo_prefix = "TODO: ";
 	string done_prefix = "DONE: ";
@@ -276,7 +277,7 @@ void load_state(){
 			} else if(startsWith(line, done_prefix)){
 				done.push_back(removeSubstring(line, done_prefix));
 			} else {
-				cerr << "[ERRO] Ill-formed `todo.txt` file at line: " << i+1 << endl;
+				cerr << "[ERRO] Ill-formed `" << todo_file << "` file at line: " << i+1 << endl;
 				exit(1);
 			}
 		}
@@ -285,7 +286,12 @@ void load_state(){
 
 int main(int argc, char **argv){
 	if(!Files::exists("todo.txt")){
-		Files::writeFile("todo.txt", "");
+		if(!Files::exists("TODO")){
+			Files::writeFile("TODO", "");
+		}
+		todo_file = "TODO";
+	} else {
+		todo_file = "todo.txt";
 	}
 	
 	// load todos
