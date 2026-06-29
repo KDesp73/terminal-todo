@@ -147,8 +147,21 @@ static int read_key(void)
 int main(int argc, char** argv)
 {
 	Tasks tasks = {0};
-	if(!tasks_load(&tasks, DEFAULT_FILE)) {
-		fprintf(stderr, "[WARN] Could not open %s file\n", DEFAULT_FILE);
+
+	const char* const files[] = {"todo.txt", "TODO.txt", "TODO", "todo"};
+	const char* data_file = files[0];
+
+	for (size_t i = 0; i < sizeof(files)/sizeof(files[0]); ++i) {
+		FILE* f = fopen(files[i], "r");
+		if (f) {
+			fclose(f);
+			data_file = files[i];
+			break;
+		}
+	}
+
+	if(!tasks_load(&tasks, (char*)data_file)) {
+		fprintf(stderr, "[WARN] Could not open %s\n", data_file);
 	}
 
 	qsort(tasks.items, tasks.count, sizeof(Task), task_cmp);
@@ -305,8 +318,8 @@ int main(int argc, char** argv)
 	printf("\e[2J\e[H");
 	enable_input_buffering();
 
-	if(!tasks_save(&tasks, DEFAULT_FILE)) {
-		fprintf(stderr, "[ERRO] Failed to save %s file\n", DEFAULT_FILE);
+	if(!tasks_save(&tasks, (char*)data_file)) {
+		fprintf(stderr, "[ERRO] Failed to save %s\n", data_file);
 		return 1;
 	}
 	

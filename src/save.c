@@ -41,38 +41,52 @@ bool tasks_load(Tasks* tasks, char* file)
 		}
 
 		char* paren_start = strchr(line, '(');
-		char* paren_end   = strchr(line, ')');
-		if (!paren_start || !paren_end || paren_end <= paren_start) {
-			fprintf(stderr, "[WARN] %s:%zu: missing or malformed \"(priority)\"\n         → %s\n", file, lineno, line);
-			continue;
-		}
 
-		char priority_str[16];
-		size_t p_len = paren_end - paren_start - 1;
-		strncpy(priority_str, paren_start + 1, p_len);
-		priority_str[p_len] = '\0';
-		task.priority = (size_t)atol(priority_str);
+		if (paren_start) {
+			// New format: TAG(p): name [desc]
+			char* paren_end = strchr(line, ')');
+			if (!paren_end || paren_end <= paren_start) {
+				fprintf(stderr, "[WARN] %s:%zu: malformed \"(priority)\"\n         → %s\n", file, lineno, line);
+				continue;
+			}
 
-		char* name_start = paren_end + 2;
-		while (*name_start == ' ') name_start++;
-		char* bracket_start = strstr(name_start, " [");
-		if (!bracket_start) {
-			fprintf(stderr, "[WARN] %s:%zu: missing \" [description]\"\n         → %s\n", file, lineno, line);
-			continue;
-		}
+			char priority_str[16];
+			size_t p_len = paren_end - paren_start - 1;
+			strncpy(priority_str, paren_start + 1, p_len);
+			priority_str[p_len] = '\0';
+			task.priority = (size_t)atol(priority_str);
 
-		size_t name_len = bracket_start - name_start;
-		strncpy(task.name, name_start, name_len);
-		task.name[name_len] = '\0';
+			char* name_start = paren_end + 2;
+			while (*name_start == ' ') name_start++;
+			char* bracket_start = strstr(name_start, " [");
+			if (bracket_start) {
+				size_t name_len = bracket_start - name_start;
+				strncpy(task.name, name_start, name_len);
+				task.name[name_len] = '\0';
 
-		char* desc_start = bracket_start + 2;
-		char* desc_end = strchr(desc_start, ']');
-		if (desc_end) {
-			size_t desc_len = desc_end - desc_start;
-			strncpy(task.description, desc_start, desc_len);
-			task.description[desc_len] = '\0';
+				char* desc_start = bracket_start + 2;
+				char* desc_end = strchr(desc_start, ']');
+				if (desc_end) {
+					size_t desc_len = desc_end - desc_start;
+					strncpy(task.description, desc_start, desc_len);
+					task.description[desc_len] = '\0';
+				} else {
+					fprintf(stderr, "[WARN] %s:%zu: missing closing \"]\" for description\n         → %s\n         description will be empty\n", file, lineno, line);
+				}
+			} else {
+				strncpy(task.name, name_start, TASK_NAME_BUFFER_SIZE - 1);
+				task.name[TASK_NAME_BUFFER_SIZE - 1] = '\0';
+			}
 		} else {
-			fprintf(stderr, "[WARN] %s:%zu: missing closing \"]\" for description\n         → %s\n         description will be empty\n", file, lineno, line);
+			// Old format: TAG: name
+			char* name = strstr(line, ": ");
+			if (!name) {
+				fprintf(stderr, "[WARN] %s:%zu: expected \": \" after tag\n         → %s\n", file, lineno, line);
+				continue;
+			}
+			name += 2;
+			strncpy(task.name, name, TASK_NAME_BUFFER_SIZE - 1);
+			task.name[TASK_NAME_BUFFER_SIZE - 1] = '\0';
 		}
 
 		task_append(tasks, task);
