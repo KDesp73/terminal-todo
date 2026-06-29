@@ -40,7 +40,7 @@ Tasks in each tab are sorted by priority (highest first).
 ## Build
 
 ```console
-$ make
+$ make all
 ```
 
 Install to a custom prefix:
