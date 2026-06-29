@@ -2,7 +2,16 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
+#include <signal.h>
 #include "todo.h"
+
+static volatile sig_atomic_t sigint_flag = 0;
+
+static void on_sigint(int sig)
+{
+	(void)sig;
+	sigint_flag = 1;
+}
 
 typedef struct {
 	size_t active_tab;
@@ -97,12 +106,15 @@ static int task_cmp(const void* a, const void* b)
 static int read_key(void)
 {
 	int c = getchar();
+	if (c == -1) return -1;
 	if (c != '\e') return c;
 
 	c = getchar();
+	if (c == -1) return -1;
 	if (c != '[') return '\e';
 
 	c = getchar();
+	if (c == -1) return -1;
 	if (c >= 'A' && c <= 'D') return c;
 	if (c == 'Z') return 'Z';
 
@@ -110,14 +122,17 @@ static int read_key(void)
 	while (c >= '0' && c <= '9') {
 		p1 = p1 * 10 + (c - '0');
 		c = getchar();
+		if (c == -1) return -1;
 	}
 
 	if (c == ';') {
 		int p2 = 0;
 		c = getchar();
+		if (c == -1) return -1;
 		while (c >= '0' && c <= '9') {
 			p2 = p2 * 10 + (c - '0');
 			c = getchar();
+			if (c == -1) return -1;
 		}
 		if (p1 == 1 && p2 == 2) {
 			if (c == 'A') return SHIFT_UP;
@@ -149,15 +164,23 @@ int main(int argc, char** argv)
 	state.selected_index = first_visible(&tasks, state.active_tab);
 
 	disable_input_buffering();
-
+	signal(SIGINT, on_sigint);
 
 	while (state.running) {		
+		if (sigint_flag) {
+			sigint_flag = 0;
+			state.running = false;
+			break;
+		}
+
 		printf("\e[2J\e[H");
 		tasks_table(&tasks, &state);
 
 		int key = read_key();
+		if (key == -1) continue;
 		switch (key) {
 			case 'q': 
+			case 3: // Ctrl+C
 				state.running = false;
 				break;
 			case '\t':

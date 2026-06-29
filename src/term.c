@@ -17,7 +17,7 @@ void enable_input_buffering()
     #else
         struct termios term;
         tcgetattr(STDIN_FILENO, &term);
-        term.c_lflag |= (ICANON | ECHO);
+        term.c_lflag |= (ICANON | ECHO | ISIG);
         tcsetattr(STDIN_FILENO, TCSANOW, &term);
 
     #endif
@@ -35,7 +35,7 @@ void disable_input_buffering()
     #else
         struct termios term;
         tcgetattr(STDIN_FILENO, &term);
-        term.c_lflag &= ~(ICANON | ECHO);
+        term.c_lflag &= ~(ICANON | ECHO | ISIG);
         tcsetattr(STDIN_FILENO, TCSANOW, &term);
 
     #endif
