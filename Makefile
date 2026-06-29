@@ -27,6 +27,8 @@ else
 	LDFLAGS += $(SANITIZERS)
 endif
 
+PREFIX ?= /usr/local
+
 # Source and object files
 SRC_FILES := $(shell find $(SRC_DIR) -name '*.c')
 OBJ_FILES = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRC_FILES))
@@ -66,14 +68,15 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c ## Compile source files with progress
 	@$(CC) $(CFLAGS) -c -o $@ $<
 
 .PHONY: install
-install: all ## Install the executable to /usr/bin/
-	@echo "[INFO] Installing $(TARGET) to /usr/bin/"
-	cp $(TARGET) /usr/bin/$(TARGET)
+install: all ## Install the executable
+	@echo "[INFO] Installing $(TARGET) to $(PREFIX)/bin/"
+	mkdir -p $(PREFIX)/bin
+	install -m 755 $(TARGET) $(PREFIX)/bin/$(TARGET)
 
 .PHONY: uninstall
-uninstall: ## Remove the executable from /usr/bin/
-	@echo "[INFO] Uninstalling $(TARGET)"
-	rm -f /usr/bin/$(TARGET)
+uninstall: ## Remove the executable
+	@echo "[INFO] Uninstalling $(TARGET) from $(PREFIX)/bin/"
+	rm -f $(PREFIX)/bin/$(TARGET)
 
 .PHONY: clean
 clean: ## Remove all build files and the executable

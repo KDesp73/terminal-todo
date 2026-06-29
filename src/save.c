@@ -43,6 +43,7 @@ bool tasks_load(Tasks* tasks, char* file)
 		task.priority = (size_t)atol(priority_str);
 
 		char* name_start = paren_end + 2;
+		while (*name_start == ' ') name_start++;
 		char* bracket_start = strstr(name_start, " [");
 		if (!bracket_start) continue;
 
