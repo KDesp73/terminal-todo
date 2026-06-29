@@ -1,3 +1,0 @@
-TODO( 0): Old task one []
-PROG( 0): Work in progress []
-DONE( 0): Completed task []
