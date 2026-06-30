@@ -42,7 +42,7 @@ bool tasks_load(Tasks* tasks, char* file)
 
 		char* paren_start = strchr(line, '(');
 
-		if (paren_start) {
+		if (paren_start && paren_start == line + 4) {
 			// New format: TAG(p): name [desc]
 			char* paren_end = strchr(line, ')');
 			if (!paren_end || paren_end <= paren_start) {
@@ -52,6 +52,7 @@ bool tasks_load(Tasks* tasks, char* file)
 
 			char priority_str[16];
 			size_t p_len = paren_end - paren_start - 1;
+			if (p_len >= sizeof(priority_str)) p_len = sizeof(priority_str) - 1;
 			strncpy(priority_str, paren_start + 1, p_len);
 			priority_str[p_len] = '\0';
 			task.priority = (size_t)atol(priority_str);
