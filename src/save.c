@@ -1,5 +1,4 @@
 #include "todo.h"
-#include <stdlib.h>
 
 bool tasks_save(Tasks* tasks, char* file)
 {
@@ -40,53 +39,38 @@ bool tasks_load(Tasks* tasks, char* file)
 			continue;
 		}
 
-		char* paren_start = strchr(line, '(');
+		// Find content after tag — skip optional (priority) if present
+		char* content = line + 4;
+		if (*content == '(') {
+			char* paren_end = strchr(content, ')');
+			if (paren_end) content = paren_end + 1;
+		}
+		while (*content == ' ') content++;
+		if (*content != ':') {
+			fprintf(stderr, "[WARN] %s:%zu: expected \":\" after tag\n         → %s\n", file, lineno, line);
+			continue;
+		}
+		content++;
+		while (*content == ' ') content++;
 
-		if (paren_start && paren_start == line + 4) {
-			// New format: TAG(p): name [desc]
-			char* paren_end = strchr(line, ')');
-			if (!paren_end || paren_end <= paren_start) {
-				fprintf(stderr, "[WARN] %s:%zu: malformed \"(priority)\"\n         → %s\n", file, lineno, line);
-				continue;
-			}
+		// Parse name and optional [description]
+		char* bracket_start = strstr(content, " [");
+		if (bracket_start) {
+			size_t name_len = bracket_start - content;
+			strncpy(task.name, content, name_len);
+			task.name[name_len] = '\0';
 
-			char priority_str[16];
-			size_t p_len = paren_end - paren_start - 1;
-			if (p_len >= sizeof(priority_str)) p_len = sizeof(priority_str) - 1;
-			strncpy(priority_str, paren_start + 1, p_len);
-			priority_str[p_len] = '\0';
-			task.priority = (size_t)atol(priority_str);
-
-			char* name_start = paren_end + 2;
-			while (*name_start == ' ') name_start++;
-			char* bracket_start = strstr(name_start, " [");
-			if (bracket_start) {
-				size_t name_len = bracket_start - name_start;
-				strncpy(task.name, name_start, name_len);
-				task.name[name_len] = '\0';
-
-				char* desc_start = bracket_start + 2;
-				char* desc_end = strchr(desc_start, ']');
-				if (desc_end) {
-					size_t desc_len = desc_end - desc_start;
-					strncpy(task.description, desc_start, desc_len);
-					task.description[desc_len] = '\0';
-				} else {
-					fprintf(stderr, "[WARN] %s:%zu: missing closing \"]\" for description\n         → %s\n         description will be empty\n", file, lineno, line);
-				}
+			char* desc_start = bracket_start + 2;
+			char* desc_end = strchr(desc_start, ']');
+			if (desc_end) {
+				size_t desc_len = desc_end - desc_start;
+				strncpy(task.description, desc_start, desc_len);
+				task.description[desc_len] = '\0';
 			} else {
-				strncpy(task.name, name_start, TASK_NAME_BUFFER_SIZE - 1);
-				task.name[TASK_NAME_BUFFER_SIZE - 1] = '\0';
+				fprintf(stderr, "[WARN] %s:%zu: missing closing \"]\" for description\n         → %s\n         description will be empty\n", file, lineno, line);
 			}
 		} else {
-			// Old format: TAG: name
-			char* name = strstr(line, ": ");
-			if (!name) {
-				fprintf(stderr, "[WARN] %s:%zu: expected \": \" after tag\n         → %s\n", file, lineno, line);
-				continue;
-			}
-			name += 2;
-			strncpy(task.name, name, TASK_NAME_BUFFER_SIZE - 1);
+			strncpy(task.name, content, TASK_NAME_BUFFER_SIZE - 1);
 			task.name[TASK_NAME_BUFFER_SIZE - 1] = '\0';
 		}
 

@@ -41,5 +41,5 @@ int task_print(Task task, FILE* fd)
 {
 	char tag[5];
 	status_tag(task.status, tag);
-	return fprintf(fd, "%s(%2zu): %s [%s]\n", tag, task.priority, task.name, task.description);
+	return fprintf(fd, "%s: %s [%s]\n", tag, task.name, task.description);
 }
