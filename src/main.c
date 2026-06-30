@@ -3,6 +3,8 @@
 #include <string.h>
 
 #include <signal.h>
+#include <unistd.h>
+#include <sys/select.h>
 #include "todo.h"
 
 static volatile sig_atomic_t sigint_flag = 0;
@@ -20,17 +22,80 @@ typedef struct {
 	bool running;
 } UIState;
 
-bool task_form(Task* task)
+static int read_edit_key(void)
 {
-	printf("%s%sName:%s ", ANSI_FG_BLUE, ANSI_BOLD, ANSI_RESET);
-	if (fgets(task->name, sizeof(task->name), stdin) == NULL) return false;
-	strip_newline(task->name);
-	printf("%s%sDescription:%s ", ANSI_FG_TEAL, ANSI_BOLD, ANSI_RESET);
-	if (fgets(task->description, sizeof(task->description), stdin) == NULL) return false;
-	strip_newline(task->description);
+	int c = getchar();
+	if (c == -1) return -1;
+	if (c != '\e') return c;
 
-	task->status = TASK_TODO;
+	struct timeval tv = {0, 50000};
+	fd_set fds;
+	FD_ZERO(&fds);
+	FD_SET(STDIN_FILENO, &fds);
 
+	if (select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv) > 0) {
+		c = getchar();
+		if (c == -1) return -1;
+		if (c == '[' || c == 'O') {
+			while (getchar() != -1) {
+				struct timeval t = {0, 0};
+				FD_ZERO(&fds);
+				FD_SET(STDIN_FILENO, &fds);
+				if (select(STDIN_FILENO + 1, &fds, NULL, NULL, &t) <= 0)
+					break;
+			}
+		}
+		return 0;
+	}
+	return '\e';
+}
+
+static bool read_line_inline(char* buffer, size_t buffer_size)
+{
+	size_t len = strlen(buffer);
+
+	printf("\e[?25h");
+	ANSI_CURSOR_BAR();
+	printf("\e[s%s\e[K", buffer);
+	fflush(stdout);
+
+	while (true) {
+		int key = read_edit_key();
+		if (key == -1) break;
+
+		if (key == 10 || key == 13) {
+			buffer[len] = '\0';
+			printf("\n");
+			break;
+		}
+
+		if (key == '\e') {
+			buffer[0] = '\0';
+			printf("\e[?25l");
+			return false;
+		}
+
+		if (key == 0) continue;
+
+		if (key == 127 || key == 8) {
+			if (len > 0) {
+				len--;
+				buffer[len] = '\0';
+			}
+		} else if (key >= 32 && key <= 126) {
+			if (len + 1 < buffer_size) {
+				buffer[len] = (char)key;
+				len++;
+				buffer[len] = '\0';
+			}
+		}
+
+		printf("\e[u\e[K%s", buffer);
+		fflush(stdout);
+	}
+
+	printf("\e[?25l");
+	fflush(stdout);
 	return true;
 }
 
@@ -70,10 +135,11 @@ void tasks_table(Tasks* tasks, UIState* state)
 
 	// ── Footer ──
 	printf("\n%s  ", ANSI_FG_OVERLAY);
-	for (int i = 0; i < 38; ++i) printf("─");
+	for (int i = 0; i < 48; ++i) printf("─");
 	printf("%s\n", ANSI_RESET);
 	printf("  ");
-	printf("%s[q]%s quit  %s[a]%s add  %s[j/k]%s nav  %s[h/l]%s move  %s[tab]%s switch%s\n",
+	printf("%s[q]%s quit  %s[a]%s add  %s[e]%s edit  %s[j/k]%s nav  %s[h/l]%s move  %s[tab]%s switch%s\n",
+		ANSI_FG_TEAL, ANSI_FG_OVERLAY,
 		ANSI_FG_TEAL, ANSI_FG_OVERLAY,
 		ANSI_FG_TEAL, ANSI_FG_OVERLAY,
 		ANSI_FG_TEAL, ANSI_FG_OVERLAY,
@@ -158,6 +224,7 @@ int main(int argc, char** argv)
 	state.selected_index = first_visible(&tasks, state.active_tab);
 
 	disable_input_buffering();
+	setvbuf(stdin, NULL, _IONBF, 0);
 	signal(SIGINT, on_sigint);
 
 	while (state.running) {		
@@ -187,6 +254,24 @@ int main(int argc, char** argv)
 				break;
 			case 'a':
 				state.new_task = true;
+				break;
+			case 'e':
+			case 'E':
+				if (tasks.count > 0 && state.selected_index < tasks.count) {
+					printf("\e[2J\e[H");
+					Task* t = &tasks.items[state.selected_index];
+
+					printf("%s%sName: %s", ANSI_FG_BLUE, ANSI_BOLD, ANSI_RESET);
+					fflush(stdout);
+					if (read_line_inline(t->name, TASK_NAME_BUFFER_SIZE)) {
+						printf("%s%sDescription: %s", ANSI_FG_TEAL, ANSI_BOLD, ANSI_RESET);
+						fflush(stdout);
+						read_line_inline(t->description, TASK_DESC_BUFFER_SIZE);
+					}
+
+					printf("\e[?25l");
+					fflush(stdout);
+				}
 				break;
 			case SHIFT_UP:
 				for (size_t i = state.selected_index; i > 0; --i) {
@@ -256,16 +341,24 @@ int main(int argc, char** argv)
 
 		if (state.new_task) {
 			printf("\e[2J\e[H");
-			enable_input_buffering();
-
 			state.new_task = false;
 
 			Task new = {0};
-			task_form(&new);
-			task_append(&tasks, new);
-			state.selected_index = tasks.count - 1;
 
-			disable_input_buffering();
+			printf("%s%sName: %s", ANSI_FG_BLUE, ANSI_BOLD, ANSI_RESET);
+			fflush(stdout);
+			if (read_line_inline(new.name, TASK_NAME_BUFFER_SIZE)) {
+				printf("%s%sDescription: %s", ANSI_FG_TEAL, ANSI_BOLD, ANSI_RESET);
+				fflush(stdout);
+				if (read_line_inline(new.description, TASK_DESC_BUFFER_SIZE)) {
+					new.status = TASK_TODO;
+					task_append(&tasks, new);
+					state.selected_index = tasks.count - 1;
+				}
+			}
+
+			printf("\e[?25l");
+			fflush(stdout);
 		}
 	}
 	printf("\e[2J\e[H");
