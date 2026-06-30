@@ -39,11 +39,12 @@ bool tasks_load(Tasks* tasks, char* file)
 			continue;
 		}
 
-		// Find content after tag — skip optional (priority) if present
+		// Find content after tag — skip optional (priority) if present (legacy)
 		char* content = line + 4;
 		if (*content == '(') {
-			char* paren_end = strchr(content, ')');
-			if (paren_end) content = paren_end + 1;
+			content++;
+			while (*content >= '0' && *content <= '9') content++;
+			if (*content == ')') content++;
 		}
 		while (*content == ' ') content++;
 		if (*content != ':') {

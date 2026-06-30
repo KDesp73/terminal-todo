@@ -74,7 +74,6 @@ void status_tag(TaskStatus status, char buffer[]);
 #define TASK_DESC_BUFFER_SIZE 1024
 typedef struct {
 	TaskStatus status;
-	size_t priority;
 	char name[TASK_NAME_BUFFER_SIZE];
 	char description[TASK_DESC_BUFFER_SIZE];
 } Task;

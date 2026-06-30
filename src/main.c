@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-#include <stdlib.h>
+
 #include <signal.h>
 #include "todo.h"
 
@@ -29,7 +29,6 @@ bool task_form(Task* task)
 	if (fgets(task->description, sizeof(task->description), stdin) == NULL) return false;
 	strip_newline(task->description);
 
-	task->priority = 0;
 	task->status = TASK_TODO;
 
 	return true;
@@ -89,15 +88,6 @@ static size_t first_visible(Tasks* tasks, TaskStatus status)
 		if (tasks->items[i].status == status)
 			return i;
 	return 0;
-}
-
-static int task_cmp(const void* a, const void* b)
-{
-	const Task* ta = (const Task*)a;
-	const Task* tb = (const Task*)b;
-	int d = (int)ta->status - (int)tb->status;
-	if (d) return d;
-	return (int)ta->priority - (int)tb->priority;
 }
 
 #define SHIFT_UP   165
@@ -164,15 +154,6 @@ int main(int argc, char** argv)
 		fprintf(stderr, "[WARN] Could not open %s\n", data_file);
 	}
 
-	qsort(tasks.items, tasks.count, sizeof(Task), task_cmp);
-
-	for (size_t i = 0; i < tasks.count; ++i) {
-		size_t p = 0;
-		for (size_t j = 0; j < i; ++j)
-			if (tasks.items[j].status == tasks.items[i].status) p++;
-		tasks.items[i].priority = p;
-	}
-
 	UIState state = {.running = true};
 	state.selected_index = first_visible(&tasks, state.active_tab);
 
@@ -208,48 +189,24 @@ int main(int argc, char** argv)
 				state.new_task = true;
 				break;
 			case SHIFT_UP:
-				if (tasks.count > 0 && state.selected_index < tasks.count) {
-					size_t above = state.selected_index;
-					while (above > 0) {
-						above--;
-						if (tasks.items[above].status == state.active_tab) break;
-					}
-					if (above != state.selected_index && tasks.items[above].status == state.active_tab) {
-						char name[TASK_NAME_BUFFER_SIZE];
-						strncpy(name, tasks.items[state.selected_index].name, TASK_NAME_BUFFER_SIZE);
-						name[TASK_NAME_BUFFER_SIZE - 1] = '\0';
-						size_t tmp = tasks.items[state.selected_index].priority;
-						tasks.items[state.selected_index].priority = tasks.items[above].priority;
-						tasks.items[above].priority = tmp;
-						qsort(tasks.items, tasks.count, sizeof(Task), task_cmp);
-						for (size_t i = 0; i < tasks.count; ++i)
-							if (strcmp(tasks.items[i].name, name) == 0) {
-								state.selected_index = i;
-								break;
-							}
+				for (size_t i = state.selected_index; i > 0; --i) {
+					if (tasks.items[i-1].status == state.active_tab) {
+						Task tmp = tasks.items[i];
+						tasks.items[i] = tasks.items[i-1];
+						tasks.items[i-1] = tmp;
+						state.selected_index = i-1;
+						break;
 					}
 				}
 				break;
 			case SHIFT_DOWN:
-				if (tasks.count > 0 && state.selected_index < tasks.count) {
-					size_t below = state.selected_index;
-					while (below < tasks.count - 1) {
-						below++;
-						if (tasks.items[below].status == state.active_tab) break;
-					}
-					if (below != state.selected_index && tasks.items[below].status == state.active_tab) {
-						char name[TASK_NAME_BUFFER_SIZE];
-						strncpy(name, tasks.items[state.selected_index].name, TASK_NAME_BUFFER_SIZE);
-						name[TASK_NAME_BUFFER_SIZE - 1] = '\0';
-						size_t tmp = tasks.items[state.selected_index].priority;
-						tasks.items[state.selected_index].priority = tasks.items[below].priority;
-						tasks.items[below].priority = tmp;
-						qsort(tasks.items, tasks.count, sizeof(Task), task_cmp);
-						for (size_t i = 0; i < tasks.count; ++i)
-							if (strcmp(tasks.items[i].name, name) == 0) {
-								state.selected_index = i;
-								break;
-							}
+				for (size_t i = state.selected_index; i < tasks.count-1; ++i) {
+					if (tasks.items[i+1].status == state.active_tab) {
+						Task tmp = tasks.items[i];
+						tasks.items[i] = tasks.items[i+1];
+						tasks.items[i+1] = tmp;
+						state.selected_index = i+1;
+						break;
 					}
 				}
 				break;
@@ -281,21 +238,17 @@ int main(int argc, char** argv)
 				break;
 			case 'h':
 			case 68: // LEFT arrow
-				if (state.active_tab > 0) {
+				if (state.active_tab > 0 && state.selected_index < tasks.count) {
+					tasks.items[state.selected_index].status = state.active_tab - 1;
 					state.active_tab--;
-					if (state.selected_index < tasks.count)
-						tasks.items[state.selected_index].status = state.active_tab;
-					qsort(tasks.items, tasks.count, sizeof(Task), task_cmp);
 					state.selected_index = first_visible(&tasks, state.active_tab);
 				}
 				break;
 			case 'l':
 			case 67: // RIGHT arrow
-				if (state.active_tab < TASK_STATUS_COUNT-1) {
+				if (state.active_tab < TASK_STATUS_COUNT-1 && state.selected_index < tasks.count) {
+					tasks.items[state.selected_index].status = state.active_tab + 1;
 					state.active_tab++;
-					if (state.selected_index < tasks.count)
-						tasks.items[state.selected_index].status = state.active_tab;
-					qsort(tasks.items, tasks.count, sizeof(Task), task_cmp);
 					state.selected_index = first_visible(&tasks, state.active_tab);
 				}
 				break;
@@ -310,7 +263,7 @@ int main(int argc, char** argv)
 			Task new = {0};
 			task_form(&new);
 			task_append(&tasks, new);
-			qsort(tasks.items, tasks.count, sizeof(Task), task_cmp);
+			state.selected_index = tasks.count - 1;
 
 			disable_input_buffering();
 		}
