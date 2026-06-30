@@ -1,5 +1,0 @@
-#!/bin/bash
-
-directory="./build"
-
-find $directory -type f -executable -exec {} \;

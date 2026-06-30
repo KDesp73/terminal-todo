@@ -1,41 +1,54 @@
 # terminal-todo
 
-An easy to use todo app for your terminal with a TUI
-
-## Preview
-
-![image](https://github.com/KDesp73/terminal-todo/assets/63654361/519945b9-7de8-47bc-a809-dbab47b3556a)
-
+A modern TUI todo app for your terminal with truecolor styling.
 
 ## Install
 
 ```console
-$ git clone --depth=1 https://github.com/KDesp73/terminal-todo
+$ git clone https://github.com/KDesp73/terminal-todo
 $ cd terminal-todo
-$ ./install.sh
+$ sudo make install
 ```
 
-A different list can be created for any directory by running `todo`
-
+A different `TODO.txt` is created per-directory.
 
 ## Keys
 
-| Key     | Functionality      |
-|---------|--------------------|
-| `h`     | Toggle help        |
-| `Up`    | Go up by one       |
-| `Down`  | Go down by one     |
-| `a`     | Add new task       |
-| `d`     | Remove a task      |
-| `q`     | Exit the program   |
-| `i`     | Create issue from selected todo   |
-| `I`     | Create issues for all todos   |
-| `Enter` | Switch task status |
-| `Tab`   | Switch between TODO and DONE tabs |
+| Key                | Functionality        |
+|--------------------|----------------------|
+| `j` / `↓`         | Navigate down        |
+| `k` / `↑`         | Navigate up          |
+| `a`                | Add new task         |
+| `q` / `Ctrl+C`    | Quit                 |
+| `Tab` / `Shift+Tab` | Switch tab         |
+| `h` / `←`         | Move task left (prev status) |
+| `l` / `→`         | Move task right (next status) |
+| `Shift+↑`         | Increase priority    |
+| `Shift+↓`         | Decrease priority    |
 
-## Github issues
+## Statuses
 
-If you want to have automatic issues you need to log-in to the [gh cli tool](https://cli.github.com/)
+| Tab    | Meaning        |
+|--------|----------------|
+| TODO   | Planned tasks  |
+| PROG   | In progress    |
+| TEST   | Testing        |
+| DONE   | Completed      |
+
+Tasks in each tab are sorted by priority (highest first).
+
+## Build
+
+```console
+$ make all
+```
+
+Install to a custom prefix:
+
+```console
+$ make install PREFIX=~/.local
+$ make uninstall
+```
 
 ## License
 
