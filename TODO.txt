@@ -1,4 +1,1 @@
-TODO: Better ansi styling [Fix background highlighting]
-TODO: Hallo [hello world]
-TODO: test [test]
-TEST: This is a message [Test description]
+PROG: Better ansi styling [Fix background highlighting]

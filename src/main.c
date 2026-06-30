@@ -152,7 +152,8 @@ void tasks_table(Tasks* tasks, UIState* state)
 	for (int i = 0; i < 48; ++i) printf("─");
 	printf("%s\n", ANSI_RESET);
 	printf("  ");
-	printf("%s[q]%s quit  %s[a]%s add  %s[e]%s edit  %s[j/k]%s nav  %s[h/l]%s move  %s[tab]%s switch%s\n",
+	printf("%s[q]%s quit  %s[a]%s add  %s[d]%s del  %s[e]%s edit  %s[j/k]%s nav  %s[h/l]%s move  %s[tab]%s switch%s\n",
+		ANSI_FG_TEAL, ANSI_FG_OVERLAY,
 		ANSI_FG_TEAL, ANSI_FG_OVERLAY,
 		ANSI_FG_TEAL, ANSI_FG_OVERLAY,
 		ANSI_FG_TEAL, ANSI_FG_OVERLAY,
@@ -265,6 +266,14 @@ int main(int argc, char** argv)
 			case 'Z': // Shift+Tab
 				state.active_tab = (state.active_tab == 0) ? TASK_STATUS_COUNT-1 : state.active_tab-1;
 				state.selected_index = first_visible(&tasks, state.active_tab);
+				break;
+			case 'd':
+				if (tasks.count > 0 && state.selected_index < tasks.count) {
+					task_remove(&tasks, state.selected_index);
+					if (state.selected_index >= tasks.count && tasks.count > 0)
+						state.selected_index = tasks.count - 1;
+					state.selected_index = first_visible(&tasks, state.active_tab);
+				}
 				break;
 			case 'a':
 				state.new_task = true;
