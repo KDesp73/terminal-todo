@@ -1,3 +1,4 @@
 TODO: Better ansi styling [Fix background highlighting]
+TODO: Hallo [hello world]
 TODO: test [test]
-TODO: Hellol [hello]
+TEST: This is a message [Test description]

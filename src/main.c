@@ -22,6 +22,8 @@ typedef struct {
 	bool running;
 } UIState;
 
+enum { KEY_LEFT = 1000, KEY_RIGHT = 1001, KEY_UP = 1002, KEY_DOWN = 1003 };
+
 static int read_edit_key(void)
 {
 	int c = getchar();
@@ -37,13 +39,13 @@ static int read_edit_key(void)
 		c = getchar();
 		if (c == -1) return -1;
 		if (c == '[' || c == 'O') {
-			while (getchar() != -1) {
-				struct timeval t = {0, 0};
-				FD_ZERO(&fds);
-				FD_SET(STDIN_FILENO, &fds);
-				if (select(STDIN_FILENO + 1, &fds, NULL, NULL, &t) <= 0)
-					break;
-			}
+			c = getchar();
+			if (c == -1) return -1;
+			if (c == 'A') return KEY_UP;
+			if (c == 'B') return KEY_DOWN;
+			if (c == 'C') return KEY_RIGHT;
+			if (c == 'D') return KEY_LEFT;
+			return 0;
 		}
 		return 0;
 	}
@@ -53,6 +55,7 @@ static int read_edit_key(void)
 static bool read_line_inline(char* buffer, size_t buffer_size)
 {
 	size_t len = strlen(buffer);
+	size_t pos = len;
 
 	printf("\e[?25h");
 	ANSI_CURSOR_BAR();
@@ -78,19 +81,30 @@ static bool read_line_inline(char* buffer, size_t buffer_size)
 		if (key == 0) continue;
 
 		if (key == 127 || key == 8) {
-			if (len > 0) {
+			if (pos > 0) {
+				memmove(&buffer[pos - 1], &buffer[pos], len - pos + 1);
+				pos--;
 				len--;
 				buffer[len] = '\0';
 			}
+		} else if (key == KEY_RIGHT) {
+			if (pos < len) pos++;
+		} else if (key == KEY_LEFT) {
+			if (pos > 0) pos--;
+		} else if (key == KEY_UP || key == KEY_DOWN) {
+			/* ignore */
 		} else if (key >= 32 && key <= 126) {
 			if (len + 1 < buffer_size) {
-				buffer[len] = (char)key;
+				memmove(&buffer[pos + 1], &buffer[pos], len - pos + 1);
+				buffer[pos] = (char)key;
+				pos++;
 				len++;
 				buffer[len] = '\0';
 			}
 		}
 
 		printf("\e[u\e[K%s", buffer);
+		if (len > pos) printf("\e[%zuD", len - pos);
 		fflush(stdout);
 	}
 
