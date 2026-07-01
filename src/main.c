@@ -152,7 +152,7 @@ void tasks_table(Tasks* tasks, UIState* state)
 	for (int i = 0; i < 48; ++i) printf("─");
 	printf("%s\n", ANSI_RESET);
 	printf("  ");
-	printf("%s[q]%s quit  %s[a]%s add  %s[d]%s del  %s[e]%s edit  %s[j/k]%s nav  %s[h/l]%s move  %s[tab]%s switch%s\n",
+	printf("%s[q]%s quit  %s[a]%s add  %s[d]%s del  %s[e]%s edit  %s[j/k]%s nav  %s[h/l]%s switch  %s[H/L]%s move%s\n",
 		ANSI_FG_TEAL, ANSI_FG_OVERLAY,
 		ANSI_FG_TEAL, ANSI_FG_OVERLAY,
 		ANSI_FG_TEAL, ANSI_FG_OVERLAY,
@@ -173,6 +173,8 @@ static size_t first_visible(Tasks* tasks, TaskStatus status)
 
 #define SHIFT_UP   165
 #define SHIFT_DOWN 166
+#define SHIFT_LEFT 167
+#define SHIFT_RIGHT 168
 
 static int read_key(void)
 {
@@ -208,6 +210,8 @@ static int read_key(void)
 		if (p1 == 1 && p2 == 2) {
 			if (c == 'A') return SHIFT_UP;
 			if (c == 'B') return SHIFT_DOWN;
+			if (c == 'C') return SHIFT_RIGHT;
+			if (c == 'D') return SHIFT_LEFT;
 		}
 		return c;
 	}
@@ -259,10 +263,14 @@ int main(int argc, char** argv)
 			case 3: // Ctrl+C
 				state.running = false;
 				break;
+			case 'l':
+			case 67: // RIGHT arrow
 			case '\t':
 				state.active_tab = (state.active_tab+1) % TASK_STATUS_COUNT;
 				state.selected_index = first_visible(&tasks, state.active_tab);
 				break;
+			case 'h':
+			case 68: // LEFT arrow
 			case 'Z': // Shift+Tab
 				state.active_tab = (state.active_tab == 0) ? TASK_STATUS_COUNT-1 : state.active_tab-1;
 				state.selected_index = first_visible(&tasks, state.active_tab);
@@ -344,16 +352,16 @@ int main(int argc, char** argv)
 						state.selected_index = i;
 				}
 				break;
-			case 'h':
-			case 68: // LEFT arrow
+			case 'H':
+			case SHIFT_LEFT:
 				if (state.active_tab > 0 && state.selected_index < tasks.count) {
 					tasks.items[state.selected_index].status = state.active_tab - 1;
 					state.active_tab--;
 					state.selected_index = first_visible(&tasks, state.active_tab);
 				}
 				break;
-			case 'l':
-			case 67: // RIGHT arrow
+			case 'L':
+			case SHIFT_RIGHT:
 				if (state.active_tab < TASK_STATUS_COUNT-1 && state.selected_index < tasks.count) {
 					tasks.items[state.selected_index].status = state.active_tab + 1;
 					state.active_tab++;
