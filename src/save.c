@@ -16,6 +16,7 @@ bool tasks_load(Tasks* tasks, char* file)
 	FILE* fd = fopen(file, "r");
 	if (!fd) return false;
 
+	bool has_errors = false;
 	char line[4 + 2 + 2 + 1 + TASK_NAME_BUFFER_SIZE + 2 + TASK_DESC_BUFFER_SIZE + 1];
 	size_t lineno = 0;
 	while (fgets(line, sizeof(line), fd)) {
@@ -26,7 +27,6 @@ bool tasks_load(Tasks* tasks, char* file)
 
 		char tag[5] = {0};
 		if (sscanf(line, "%4s", tag) != 1) {
-			fprintf(stderr, "[WARN] %s:%zu: empty line, skipping\n", file, lineno);
 			continue;
 		}
 
@@ -36,6 +36,7 @@ bool tasks_load(Tasks* tasks, char* file)
 		else if (strcmp(tag, "DONE") == 0) task.status = TASK_DONE;
 		else {
 			fprintf(stderr, "[WARN] %s:%zu: unknown tag \"%s\", expected TODO/PROG/TEST/DONE\n         → %s\n", file, lineno, tag, line);
+			has_errors = true;
 			continue;
 		}
 
@@ -49,6 +50,7 @@ bool tasks_load(Tasks* tasks, char* file)
 		while (*content == ' ') content++;
 		if (*content != ':') {
 			fprintf(stderr, "[WARN] %s:%zu: expected \":\" after tag\n         → %s\n", file, lineno, line);
+			has_errors = true;
 			continue;
 		}
 		content++;
@@ -68,7 +70,12 @@ bool tasks_load(Tasks* tasks, char* file)
 				strncpy(task.description, desc_start, desc_len);
 				task.description[desc_len] = '\0';
 			} else {
-				fprintf(stderr, "[WARN] %s:%zu: missing closing \"]\" for description\n         → %s\n         description will be empty\n", file, lineno, line);
+				size_t col = desc_start - line;
+				fprintf(stderr, "[ERRO] %s:%zu: missing closing \"]\" for description\n         → %s\n", file, lineno, line);
+				for (size_t i = 0; i < col + 9; i++) fprintf(stderr, " ");
+				fprintf(stderr, "^\n");
+				has_errors = true;
+				continue;
 			}
 		} else {
 			strncpy(task.name, content, TASK_NAME_BUFFER_SIZE - 1);
@@ -78,5 +85,6 @@ bool tasks_load(Tasks* tasks, char* file)
 		task_append(tasks, task);
 	}
 
-	return !fclose(fd);
+	fclose(fd);
+	return !has_errors;
 }

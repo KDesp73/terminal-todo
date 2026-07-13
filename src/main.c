@@ -225,18 +225,21 @@ int main(int argc, char** argv)
 
 	const char* const files[] = {"todo.txt", "TODO.txt", "TODO", "todo"};
 	const char* data_file = files[0];
+	bool file_found = false;
 
 	for (size_t i = 0; i < sizeof(files)/sizeof(files[0]); ++i) {
 		FILE* f = fopen(files[i], "r");
 		if (f) {
 			fclose(f);
 			data_file = files[i];
+			file_found = true;
 			break;
 		}
 	}
 
-	if(!tasks_load(&tasks, (char*)data_file)) {
-		fprintf(stderr, "[WARN] Could not open %s\n", data_file);
+	if (file_found && !tasks_load(&tasks, (char*)data_file)) {
+		fprintf(stderr, "[ERRO] Failed to load %s. Please fix the file and try again.\n", data_file);
+		return 1;
 	}
 
 	UIState state = {.running = true};
