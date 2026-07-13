@@ -5,12 +5,14 @@ A modern TUI todo app for your terminal with truecolor styling.
 ## Install
 
 ```console
-$ git clone https://github.com/KDesp73/terminal-todo
-$ cd terminal-todo
+$ git clone https://github.com/KDesp73/todo
+$ cd todo
 $ sudo make install
 ```
 
 A different `TODO.txt` is created per-directory.
+
+> Possible filenames: {TODO,todo}[.txt]
 
 ## Keys
 
