@@ -1,4 +1,4 @@
-# terminal-todo
+# todo
 
 A modern TUI todo app for your terminal with truecolor styling.
 
