@@ -128,7 +128,14 @@ void tasks_table(Tasks* tasks, UIState* state)
 			printf("%s│%s", ANSI_FG_OVERLAY, ANSI_BG_SURFACE);
 	}
 	printf("%s\n", ANSI_RESET);
-	putchar('\n');
+
+	// ── Task Count ──
+	size_t tab_count = 0;
+	for (size_t i = 0; i < tasks->count; ++i) {
+		if (tasks->items[i].status == state->active_tab)
+			tab_count++;
+	}
+	printf("%s  %zu tasks%s\n\n", ANSI_FG_OVERLAY, tab_count, ANSI_RESET);
 
 	// ── Task List ──
 	for (size_t i = 0; i < tasks->count; ++i) {
