@@ -314,28 +314,33 @@ int main(int argc, char** argv)
 					fflush(stdout);
 				}
 				break;
-			case SHIFT_UP:
-				for (size_t i = state.selected_index; i > 0; --i) {
-					if (tasks.items[i-1].status == state.active_tab) {
-						Task tmp = tasks.items[i];
-						tasks.items[i] = tasks.items[i-1];
-						tasks.items[i-1] = tmp;
-						state.selected_index = i-1;
+		case SHIFT_UP:
+			if (state.selected_index > 0) {
+				for (size_t i = state.selected_index - 1; ; --i) {
+					if (tasks.items[i].status == state.active_tab) {
+						Task tmp = tasks.items[state.selected_index];
+						tasks.items[state.selected_index] = tasks.items[i];
+						tasks.items[i] = tmp;
+						state.selected_index = i;
+						break;
+					}
+					if (i == 0) break;
+				}
+			}
+			break;
+		case SHIFT_DOWN:
+			if (state.selected_index < tasks.count - 1) {
+				for (size_t i = state.selected_index + 1; i < tasks.count; ++i) {
+					if (tasks.items[i].status == state.active_tab) {
+						Task tmp = tasks.items[state.selected_index];
+						tasks.items[state.selected_index] = tasks.items[i];
+						tasks.items[i] = tmp;
+						state.selected_index = i;
 						break;
 					}
 				}
-				break;
-			case SHIFT_DOWN:
-				for (size_t i = state.selected_index; i < tasks.count-1; ++i) {
-					if (tasks.items[i+1].status == state.active_tab) {
-						Task tmp = tasks.items[i];
-						tasks.items[i] = tasks.items[i+1];
-						tasks.items[i+1] = tmp;
-						state.selected_index = i+1;
-						break;
-					}
-				}
-				break;
+			}
+			break;
 			case 'k':
 			case 65: // UP
 				if (tasks.count > 0) {
