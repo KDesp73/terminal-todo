@@ -23,6 +23,11 @@ bool tasks_load(Tasks* tasks, char* file)
 		lineno++;
 		strip_newline(line);
 
+		// Skip empty lines and comment lines
+		if (line[0] == '\0' || line[0] == '#') {
+			continue;
+		}
+
 		Task task = {0};
 
 		char tag[5] = {0};
